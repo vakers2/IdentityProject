@@ -1,5 +1,4 @@
 ﻿using IdentityProject.Models;
-using IdentityProject.Services.Interfaces;
 using IdentityProject.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -12,14 +11,13 @@ namespace IdentityProject.Controllers
 {
     public class RoleController : Controller
     {
-        private readonly IRoleService roleService;
+        RoleManager<CustomRole> _roleManager;
 
-        public RoleController(IRoleService roleService)
+        public RoleController(RoleManager<CustomRole> roleManager)
         {
-            this.roleService = roleService;
+            _roleManager = roleManager;
         }
-
-        public IActionResult Index() => View(roleService.GetRoles());
+        public IActionResult Index() => View(_roleManager.Roles.ToList());
 
         public IActionResult Create() => View();
 
@@ -28,7 +26,7 @@ namespace IdentityProject.Controllers
         {
             if (ModelState.IsValid)
             {
-                IdentityResult result = await roleService.CreateRoleAsync(role);
+                IdentityResult result = await _roleManager.CreateAsync(new CustomRole(role.Name, role.Description));
                 if (result.Succeeded)
                 {
                     return RedirectToAction("Index");
@@ -48,8 +46,11 @@ namespace IdentityProject.Controllers
         [HttpPost]
         public async Task<IActionResult> Delete(string id)
         {
-            var result = await roleService.DeleteRoleAsync(id);
-
+            CustomRole role = await _roleManager.FindByIdAsync(id);
+            if (role != null)
+            {
+                IdentityResult result = await _roleManager.DeleteAsync(role);
+            }
             return RedirectToAction("Index");
         }
     }

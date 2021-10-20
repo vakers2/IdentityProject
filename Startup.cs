@@ -41,12 +41,12 @@ namespace IdentityProject
             services.AddDatabaseDeveloperPageExceptionFilter();
 
             services.AddDefaultIdentity<CustomUser>(options => options.SignIn.RequireConfirmedAccount = false)
-                .AddRoles<CustomRole>()
-                .AddRoleStore<CustomRoleStore>()
-                .AddUserStore<CustomUserStore>()
                 .AddEntityFrameworkStores<ApplicationDbContext>();
 
-            services.AddScoped<IRoleService, RoleService>();
+            services.AddTransient<IUserStore<CustomUser>, CustomUserStore>();
+            services.AddTransient<IRoleStore<CustomRole>, CustomRoleStore>();
+
+            //services.AddScoped<IRoleService, RoleService>();
 
             services.AddHostedService<TimedHostedService>();
 
