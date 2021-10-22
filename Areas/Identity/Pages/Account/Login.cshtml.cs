@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 using IdentityProject.Models;
+using System.Security.Claims;
 
 namespace IdentityProject.Areas.Identity.Pages.Account
 {

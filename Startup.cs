@@ -1,7 +1,11 @@
+using IdentityProject.Authorization.Handlers;
+using IdentityProject.Authorization.Requirements;
 using IdentityProject.Data;
+using IdentityProject.Middlewares;
 using IdentityProject.Models;
 using IdentityProject.Services;
 using IdentityProject.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
@@ -43,10 +47,20 @@ namespace IdentityProject
             services.AddDefaultIdentity<CustomUser>(options => options.SignIn.RequireConfirmedAccount = false)
                 .AddEntityFrameworkStores<ApplicationDbContext>();
 
-            services.AddTransient<IUserStore<CustomUser>, CustomUserStore>();
-            services.AddTransient<IRoleStore<CustomRole>, CustomRoleStore>();
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy("CoolName", policy => policy.Requirements.Add(new CoolNameRequirement("Vladislav")));
+            });
 
-            //services.AddScoped<IRoleService, RoleService>();
+            services.AddScoped<IAuthorizationHandler, CoolNameHandler>();
+
+            services.AddScoped<UserManager<CustomUser>>();
+            services.AddScoped<RoleManager<CustomRole>>();
+
+            services.AddScoped<IUserStore<CustomUser>, CustomUserStore>();
+            services.AddScoped<IRoleStore<CustomRole>, CustomRoleStore>();
+
+            services.AddScoped<IRoleService, RoleService>();
 
             services.AddHostedService<TimedHostedService>();
 
@@ -76,6 +90,8 @@ namespace IdentityProject
             }
             app.UseHttpsRedirection();
             app.UseStaticFiles();
+
+            app.UseMiddleware<TokenMiddleware>();
 
             app.UseRouting();
 
