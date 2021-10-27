@@ -22,8 +22,10 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.FileProviders;
 
 namespace IdentityProject
 {
@@ -45,7 +47,7 @@ namespace IdentityProject
             services.AddDatabaseDeveloperPageExceptionFilter();
 
             services.AddDefaultIdentity<CustomUser>(options => options.SignIn.RequireConfirmedAccount = false)
-                .AddEntityFrameworkStores<ApplicationDbContext>();
+                .AddUserStore<CustomUserStore>();
 
             services.AddAuthorization(options =>
             {
@@ -54,13 +56,13 @@ namespace IdentityProject
 
             services.AddScoped<IAuthorizationHandler, CoolNameHandler>();
 
-            services.AddScoped<UserManager<CustomUser>>();
             services.AddScoped<RoleManager<CustomRole>>();
 
-            services.AddScoped<IUserStore<CustomUser>, CustomUserStore>();
             services.AddScoped<IRoleStore<CustomRole>, CustomRoleStore>();
 
             services.AddScoped<IRoleService, RoleService>();
+
+            services.AddScoped<TokenMiddleware>();
 
             services.AddHostedService<TimedHostedService>();
 
@@ -72,7 +74,16 @@ namespace IdentityProject
                 .AddCheck("Baz", () =>
                     HealthCheckResult.Unhealthy("Baz is OK!"), tags: new[] { "baz_tag" });
 
+            services.AddRazorPages();
+
             services.AddControllersWithViews();
+
+            services.AddAuthorization(options =>
+            {
+                options.FallbackPolicy = new AuthorizationPolicyBuilder()
+                    .RequireAuthenticatedUser()
+                    .Build();
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -97,6 +108,13 @@ namespace IdentityProject
 
             app.UseAuthentication();
             app.UseAuthorization();
+
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                FileProvider = new PhysicalFileProvider(
+                    Path.Combine(env.ContentRootPath, "CustomStaticFiles")),
+                RequestPath = "/files"
+            });
 
             app.UseEndpoints(endpoints =>
             {

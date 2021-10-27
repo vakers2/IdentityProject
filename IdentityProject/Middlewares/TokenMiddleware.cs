@@ -6,16 +6,14 @@ using System.Threading.Tasks;
 
 namespace IdentityProject.Middlewares
 {
-    public class TokenMiddleware
+    public class TokenMiddleware : IMiddleware
     {
-        private readonly RequestDelegate next;
-
-        public TokenMiddleware(RequestDelegate next)
+        public TokenMiddleware()
         {
-            this.next = next;
+
         }
 
-        public async Task InvokeAsync(HttpContext context)
+        public async Task InvokeAsync(HttpContext context, RequestDelegate next)
         {
             var token = context.Request.Query["token"];
             if (token == "test")
